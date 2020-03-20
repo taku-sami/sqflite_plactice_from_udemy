@@ -7,10 +7,12 @@ import 'package:sqflite/sqflite.dart';
 
 class NoteList extends StatefulWidget {
   @override
-  _NoteListState createState() => _NoteListState();
+  State<StatefulWidget> createState() {
+    return NoteListState();
+  }
 }
 
-class _NoteListState extends State<NoteList> {
+class NoteListState extends State<NoteList> {
   DatabaseHelper databaseHelper = DatabaseHelper();
   List<Note> noteList;
   int count = 0;
@@ -29,8 +31,8 @@ class _NoteListState extends State<NoteList> {
       body: getNoteListView(),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          print('FAB Tapped');
-          navigateToDetail(Note('', '', '', 2), 'Add Note');
+          debugPrint('FAB clicked');
+          navigateToDetail(Note('', '', 2), 'Add Note');
         },
         tooltip: 'Add Note',
         child: Icon(Icons.add),
@@ -40,6 +42,7 @@ class _NoteListState extends State<NoteList> {
 
   ListView getNoteListView() {
     TextStyle titleStyle = Theme.of(context).textTheme.subhead;
+
     return ListView.builder(
       itemCount: count,
       itemBuilder: (BuildContext context, int position) {
@@ -56,10 +59,7 @@ class _NoteListState extends State<NoteList> {
               this.noteList[position].title,
               style: titleStyle,
             ),
-            subtitle: Text(
-              this.noteList[position].date,
-              style: titleStyle,
-            ),
+            subtitle: Text(this.noteList[position].date),
             trailing: GestureDetector(
               child: Icon(
                 Icons.delete,
@@ -70,9 +70,8 @@ class _NoteListState extends State<NoteList> {
               },
             ),
             onTap: () {
-              print('ListTile Tapped');
-              navigateToDetail(
-                  Note(this.noteList[position].title, '', '', 2), 'Edit Note');
+              debugPrint("ListTile Tapped");
+              navigateToDetail(this.noteList[position], 'Edit Note');
             },
           ),
         );
@@ -80,6 +79,7 @@ class _NoteListState extends State<NoteList> {
     );
   }
 
+  // Returns the priority color
   Color getPriorityColor(int priority) {
     switch (priority) {
       case 1:
@@ -88,11 +88,13 @@ class _NoteListState extends State<NoteList> {
       case 2:
         return Colors.yellow;
         break;
+
       default:
         return Colors.yellow;
     }
   }
 
+  // Returns the priority icon
   Icon getPriorityIcon(int priority) {
     switch (priority) {
       case 1:
@@ -101,6 +103,7 @@ class _NoteListState extends State<NoteList> {
       case 2:
         return Icon(Icons.keyboard_arrow_right);
         break;
+
       default:
         return Icon(Icons.keyboard_arrow_right);
     }
@@ -119,15 +122,12 @@ class _NoteListState extends State<NoteList> {
     Scaffold.of(context).showSnackBar(snackBar);
   }
 
-  //Navigator.pushはpopで帰ってくるまでが一連の処理
-  //非同期処理により、popで帰ってきた際に値を受け取ることができる
   void navigateToDetail(Note note, String title) async {
-    bool result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => NoteDetail(note, title),
-      ),
-    );
+    bool result =
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return NoteDetail(note, title);
+    }));
+
     if (result == true) {
       updateListView();
     }
@@ -135,11 +135,13 @@ class _NoteListState extends State<NoteList> {
 
   void updateListView() {
     final Future<Database> dbFuture = databaseHelper.initializeDatabase();
-    dbFuture.then((database) {
+    dbFuture.then((noteList) {
       Future<List<Note>> noteListFuture = databaseHelper.getNoteList();
-      setState(() {
-        this.noteList = noteList;
-        this.count = noteList.length;
+      noteListFuture.then((noteList) {
+        setState(() {
+          this.noteList = noteList;
+          this.count = noteList.length;
+        });
       });
     });
   }

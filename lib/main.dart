@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:sqfliteplacticefromudemy/screens/note_detail.dart';
 import 'package:sqfliteplacticefromudemy/screens/note_list.dart';
 
 void main() => runApp(MyApp());
